@@ -6,7 +6,7 @@ contract StudentRegisteration
 
     address private owner;
 
-    constructor() payable 
+    constructor() 
     {
         owner=msg.sender;
     }
