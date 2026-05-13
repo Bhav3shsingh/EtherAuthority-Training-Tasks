@@ -1,0 +1,65 @@
+// SPDX-License-Identifier: Unlicensed
+pragma solidity ^0.8.0;
+
+contract StoreAndUpdateInternship
+{
+    address private owner;
+    mapping (uint256=>address) assignLog;
+    mapping (uint256=>Task) tasks;
+
+    constructor() 
+    {
+        owner=msg.sender;
+    }
+
+    enum Status { 
+        Pending,    
+        InProgress, 
+        Completed,  
+        Rejected,  
+        Reviewed
+    }
+    
+
+    struct Task
+    {
+        uint256 taskID;
+        Status taskStatus;
+        address assignedIntern;
+        uint256 startTime;
+        uint256 completionTime;
+    }
+
+    function assignTask(address trainee, uint256 taskid) public onlyAdmin{
+        tasks[taskid]=Task(taskid,Status.Pending,trainee,0,0);
+        assignLog[taskid]=trainee;
+    }    
+
+    function startTask(uint256 id) public 
+    {   
+        require((assignLog[id]==msg.sender && (tasks[id].taskStatus==Status.Rejected||tasks[id].taskStatus==Status.Pending)),"Not assigned");
+        tasks[id].taskStatus = Status.InProgress;
+        tasks[id].startTime=block.timestamp;
+    }
+
+    function submitTask(uint256 id) public {
+        require((assignLog[id]==msg.sender && tasks[id].taskStatus==Status.InProgress),"Not assigned");
+        tasks[id].taskStatus = Status.Completed;
+        tasks[id].completionTime=block.timestamp;
+    }
+
+    function acceptTask(uint256 id) public onlyAdmin {
+        tasks[id].taskStatus = Status.Reviewed;
+    }
+
+    function rejectTask(uint256 id) public onlyAdmin {
+        tasks[id].taskStatus = Status.Rejected;
+    }
+    
+
+    modifier onlyAdmin{
+        require(msg.sender==owner,"Unauthorized");
+        _;
+    }
+
+}
